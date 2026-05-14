@@ -9,6 +9,19 @@ use App\Models\RetoCompletado;
 // Controlador para funciones administrativas relacionadas con retos
 class AdminRetoController extends Controller
 {
+    // Lista todos los retos con paginación (para gestión admin)
+    public function listar(Request $request)
+    {
+        $query = Reto::with(['lugar:id,nombre_lugar', 'tipoReto:id,nombre_tipo_reto']);
+
+        if ($request->filled('buscar')) {
+            $query->where('nombre_reto', 'like', '%' . $request->input('buscar') . '%');
+        }
+
+        $retos = $query->orderByDesc('created_at')->paginate(15);
+        return response()->json($retos);
+    }
+
     //lista los retos completados pendientes
     public function index(Request $request)
     {

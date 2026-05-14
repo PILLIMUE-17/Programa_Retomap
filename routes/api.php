@@ -14,6 +14,9 @@ use App\Http\Controllers\AdminRetoController;
 use App\Http\Controllers\AdminAliadoController;
 use App\Http\Controllers\AdminLugarController;
 use App\Http\Controllers\AdminBeneficioController;
+use App\Http\Controllers\AdminUsuarioController;
+use App\Http\Controllers\AdminEstadisticaController;
+use App\Http\Controllers\AdminPublicacionController;
 use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\UploadController;
 
@@ -54,17 +57,25 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
     });
 
     // ── Publicaciones ──────────────────────────────────
-    Route::get('/feed', [PublicacionController::class, 'feed']);   // GET /api/feed
+    Route::get('/feed',          [PublicacionController::class, 'feed']);         // GET /api/feed
+    Route::get('/feed/amigos',   [PublicacionController::class, 'feedAmigos']);   // GET /api/feed/amigos
+    Route::get('/feed/trending', [PublicacionController::class, 'trending']);     // GET /api/feed/trending
 
     Route::prefix('publicaciones')->group(function () {
         Route::post('/',                    [PublicacionController::class, 'store']);       // POST   /api/publicaciones
         Route::get('/usuario/{id}',         [PublicacionController::class, 'porUsuario']); // GET    /api/publicaciones/usuario/1
         Route::get('/{id}',                 [PublicacionController::class, 'show']);        // GET    /api/publicaciones/1
         Route::delete('/{id}',              [PublicacionController::class, 'destroy']);     // DELETE /api/publicaciones/1
-        Route::post('/{id}/like',           [PublicacionController::class, 'toggleLike']); // POST   /api/publicaciones/1/like
-        Route::post('/{id}/comentar',       [PublicacionController::class, 'comentar']);   // POST   /api/publicaciones/1/comentar
+        Route::post('/{id}/like',       [PublicacionController::class, 'toggleLike']); // POST /api/publicaciones/1/like
+        Route::post('/{id}/comentar',   [PublicacionController::class, 'comentar']);   // POST /api/publicaciones/1/comentar
+        Route::post('/{id}/compartir',  [PublicacionController::class, 'compartir']);  // POST /api/publicaciones/1/compartir
+        Route::post('/autopublicar',    [PublicacionController::class, 'autopublicar']); // POST /api/publicaciones/autopublicar
     });
-    
+
+    Route::prefix('comentarios')->group(function () {
+        Route::post('/{id}/like', [PublicacionController::class, 'likeComentario']); // POST /api/comentarios/1/like
+    });
+
     // ── Perfil ─────────────────────────────────────────
     Route::prefix('perfil')->group(function () {
         Route::get('/',          [PerfilController::class, 'miPerfil']);       // GET /api/perfil
@@ -116,26 +127,51 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 // RUTAS ADMIN — requieren token + es_admin = true
 // ─────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+
+    // ── Estadísticas del sistema ───────────────────────
+    Route::get('/estadisticas',                        [AdminEstadisticaController::class, 'index']);
+
+    // ── Gestión de usuarios ────────────────────────────
+    Route::get('/usuarios',                            [AdminUsuarioController::class, 'index']);
+    Route::get('/usuarios/{id}',                       [AdminUsuarioController::class, 'show']);
+    Route::put('/usuarios/{id}',                       [AdminUsuarioController::class, 'update']);
+    Route::put('/usuarios/{id}/toggle-activo',         [AdminUsuarioController::class, 'toggleActivo']);
+    Route::put('/usuarios/{id}/toggle-admin',          [AdminUsuarioController::class, 'toggleAdmin']);
+
+    // ── Moderación de evidencias (retos completados) ───
     Route::get('/retos-completados',                   [AdminRetoController::class, 'index']);
     Route::put('/retos-completados/{id}/aprobar',      [AdminRetoController::class, 'aprobar']);
     Route::put('/retos-completados/{id}/rechazar',     [AdminRetoController::class, 'rechazar']);
-    Route::post('/retos',                               [AdminRetoController::class, 'store']);
+
+    // ── CRUD de retos ──────────────────────────────────
+    Route::get('/retos',                               [AdminRetoController::class, 'listar']);
+    Route::post('/retos',                              [AdminRetoController::class, 'store']);
     Route::put('/retos/{id}',                          [AdminRetoController::class, 'update']);
     Route::delete('/retos/{id}',                       [AdminRetoController::class, 'destroy']);
 
-    // Rutas para gestionar aliados
-    Route::get('/aliados',                            [AdminAliadoController::class, 'index']);
-    Route::post('/aliados',                           [AdminAliadoController::class, 'store']);
-    Route::put('/aliados/{id}',                      [AdminAliadoController::class, 'update']);
-    Route::delete('/aliados/{id}',                   [AdminAliadoController::class, 'destroy']);
-    // Rutas para gestionar lugares
-    Route::post('/lugares',                           [AdminLugarController::class, 'store']);
-    Route::put('/lugares/{id}',                      [AdminLugarController::class, 'update']);
-    Route::delete('/lugares/{id}',                   [AdminLugarController::class, 'destroy']);
+    // ── Gestión de aliados ─────────────────────────────
+    Route::get('/aliados',                             [AdminAliadoController::class, 'index']);
+    Route::post('/aliados',                            [AdminAliadoController::class, 'store']);
+    Route::put('/aliados/{id}',                        [AdminAliadoController::class, 'update']);
+    Route::delete('/aliados/{id}',                     [AdminAliadoController::class, 'destroy']);
 
-    // Rutas para gestionar beneficios
-    Route::post('/beneficios',                        [AdminBeneficioController::class, 'store']);
-    Route::put('/beneficios/{id}',                   [AdminBeneficioController::class, 'update']);
-    Route::delete('/beneficios/{id}',                [AdminBeneficioController::class, 'destroy']);
+    // ── Gestión de lugares ─────────────────────────────
+    Route::get('/lugares',                             [AdminLugarController::class, 'index']);
+    Route::post('/lugares',                            [AdminLugarController::class, 'store']);
+    Route::put('/lugares/{id}',                        [AdminLugarController::class, 'update']);
+    Route::delete('/lugares/{id}',                     [AdminLugarController::class, 'destroy']);
+
+    // ── Gestión de beneficios ──────────────────────────
+    Route::get('/beneficios',                          [AdminBeneficioController::class, 'index']);
+    Route::post('/beneficios',                         [AdminBeneficioController::class, 'store']);
+    Route::put('/beneficios/{id}',                     [AdminBeneficioController::class, 'update']);
+    Route::delete('/beneficios/{id}',                  [AdminBeneficioController::class, 'destroy']);
+
+    // ── Moderación de publicaciones ────────────────────
+    Route::get('/publicaciones',                       [AdminPublicacionController::class, 'index']);
+    Route::get('/publicaciones/reportadas',             [AdminPublicacionController::class, 'reportadas']);
+    Route::put('/publicaciones/{id}/ocultar',           [AdminPublicacionController::class, 'ocultar']);
+    Route::put('/publicaciones/{id}/restaurar',         [AdminPublicacionController::class, 'restaurar']);
+    Route::delete('/publicaciones/{id}',               [AdminPublicacionController::class, 'destroy']);
 
 });

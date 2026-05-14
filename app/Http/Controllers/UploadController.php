@@ -12,7 +12,7 @@ class UploadController extends Controller
         ]);
         $ruta = $request->file('archivo')->store('evidencias', 'public');
         return response()->json([
-            'url' => Storage::url($ruta),
+            'url' => asset(Storage::url($ruta)),
         ],201);
     }
 }

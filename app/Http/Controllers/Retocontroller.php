@@ -160,10 +160,11 @@ class RetoController extends Controller
         $usuario->refresh();
 
         return response()->json([
-            'message'     => '¡Reto completado! +' . $reto->xp_recompensa_reto . ' XP',
-            'xp_ganado'   => $reto->xp_recompensa_reto,
-            'xp_total'    => $usuario->xp_total_usuario,
-            'nivel_actual' => $usuario->nivel?->nombre_nivel,
+            'message'            => '¡Reto completado! +' . $reto->xp_recompensa_reto . ' XP',
+            'reto_completado_id' => $completado->id,
+            'xp_ganado'          => $reto->xp_recompensa_reto,
+            'xp_total'           => $usuario->xp_total_usuario,
+            'nivel_actual'       => $usuario->nivel?->nombre_nivel,
         ], 201);
     }
 
@@ -181,6 +182,7 @@ class RetoController extends Controller
         return response()->json([
             'data' => $completados->map(fn($c) => [
                 'id'           => $c->id,
+                'reto_id'      => $c->reto_id,
                 'reto'         => $c->reto->nombre_reto,
                 'lugar'        => $c->reto->lugar->nombre_lugar,
                 'xp_ganado'    => $c->xp_ganado_reto_completado,

@@ -8,6 +8,18 @@ use Illuminate\Http\Request;
 class AdminBeneficioController extends Controller
 {
     // ─────────────────────────────────────────────────
+    // GET /api/admin/beneficios
+    // Lista todos los beneficios con paginación
+    // ─────────────────────────────────────────────────
+    public function index(Request $request)
+    {
+        $query = Beneficio::with('aliado:id,nombre_negocio_aliado');
+
+        $beneficios = $query->orderByDesc('created_at')->paginate(15);
+        return response()->json($beneficios);
+    }
+
+    // ─────────────────────────────────────────────────
     // POST /api/admin/beneficios
     // Crear un beneficio nuevo
     // ─────────────────────────────────────────────────

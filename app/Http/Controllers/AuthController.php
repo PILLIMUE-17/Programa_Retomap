@@ -87,6 +87,7 @@ class AuthController extends Controller
                 'nombre'       => $usuario->nombre_usuario,
                 'email'        => $usuario->email_usuario,
                 'username'     => $usuario->username_usuario,
+                "es_admin"      => (bool) $usuario->es_admin,
                 'avatar_url'   => $usuario->avatar_url_usuario,
                 'xp_total'     => $usuario->xp_total_usuario,
                 'racha_dias'   => $usuario->racha_dias_usuario,
@@ -102,7 +103,12 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         // Revocar SOLO el token que se usó en esta petición
-        $request->user()->currentAccessToken()->delete();
+        /** @var \App\Models\Usuario|null $user */
+        $user = $request->user();
+
+        if ($user) {
+            $user->currentAccessToken()->delete();
+        }
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente.',
@@ -115,9 +121,16 @@ class AuthController extends Controller
     public function me(Request $request): JsonResponse
     {
         // auth()->user() devuelve el usuario dueño del token
-        $usuario = $request->user()->load('nivel');
+        /** @var \App\Models\Usuario|null $usuario */
+        $usuario = $request->user();
 
-       return response()->json([
+        if (!$usuario) {
+            return response()->json(['message' => 'No autenticado.'], 401);
+        }
+
+        $usuario->load(['nivel', 'insignias']);
+
+        return response()->json([
             'usuario' => [
                 'id'           => $usuario->id,
                 'nombre'       => $usuario->nombre_usuario,
@@ -134,7 +147,6 @@ class AuthController extends Controller
                 ]),
             ],
         ], 200);
-       
     }
 }
 

@@ -17,12 +17,16 @@ class Publicacion extends Model
         'caption_publicacion',
         'imagen_url_publicacion',
         'likes_cache_publicacion',
+        'comentarios_cache_publicacion',
+        'compartidos_cache_publicacion',
         'visible_publicacion',
     ];
- 
+
     protected $casts = [
-        'visible_publicacion'      => 'boolean',
-        'likes_cache_publicacion'  => 'integer',
+        'visible_publicacion'           => 'boolean',
+        'likes_cache_publicacion'       => 'integer',
+        'comentarios_cache_publicacion' => 'integer',
+        'compartidos_cache_publicacion' => 'integer',
     ];
  
     // Pertenece a un usuario
